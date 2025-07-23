@@ -1,0 +1,27 @@
+name: Build Lua Static Lib
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repo (du har det lokalt allerede)
+        uses: actions/checkout@v4
+
+      - name: Configure with CMake
+        run: >
+          cmake
+          -DCMAKE_BUILD_TYPE=MinSizeRel
+          -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
+          .
+
+      - name: Build
+        run: cmake --build . --config MinSizeRel
+
+      - name: Upload lua_static.lib as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lua-lib
+          path: lua-5.4.7/MinSizeRel/lua_static.lib
