@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.1...3.12)
+cmake_policy(SET CMP0077 NEW)
 cmake_policy(SET CMP0091 NEW)
 project(lua LANGUAGES C VERSION 5.4.8)
 
