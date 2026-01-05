@@ -46,8 +46,8 @@ target_include_directories(lib${PROJECT_NAME}
 
 # ------------------------------------------------------------------------------
 # Create and link lua binaries
-add_executable(lua lua.c)
-add_executable(luac luac.c)
+add_executable(lua lua.c ${PROJECT_SOURCE_DIR}/logo/lua-logo-olp-dist.rc)
+add_executable(luac luac.c ${PROJECT_SOURCE_DIR}/logo/lua-logo-olp-dist.rc)
 target_link_libraries(lua lib${PROJECT_NAME})
 target_link_libraries(luac lib${PROJECT_NAME})
 
