@@ -45,17 +45,29 @@ target_include_directories(lib${PROJECT_NAME}
 )
 
 # ------------------------------------------------------------------------------
-# Create and link lua binaries
+# Create and link lua binaries (with wlua for usage with wxLua)
+# wlua prevents the annoying CMD-Window in the background
 add_executable(lua lua.c ${PROJECT_SOURCE_DIR}/logo/lua-logo-olp-dist.rc)
 add_executable(luac luac.c ${PROJECT_SOURCE_DIR}/logo/lua-logo-olp-dist.rc)
+add_executable(wlua lua.c ${PROJECT_SOURCE_DIR}/logo/lua-logo-olp-dist.rc)
 target_link_libraries(lua lib${PROJECT_NAME})
 target_link_libraries(luac lib${PROJECT_NAME})
+target_link_libraries(wlua lib${PROJECT_NAME})
+if(WIN32)
+  # Set subsystem to WINDOWS for wlua
+  set_target_properties(wlua PROPERTIES WIN32_EXECUTABLE TRUE)
+  # When using MSVC, the entry point must be explicitly set because
+  # lua.c defines a standard "main" function instead of "WinMain":
+  if(MSVC)
+    set_property(TARGET wlua APPEND_STRING PROPERTY LINK_FLAGS " /ENTRY:mainCRTStartup")
+  endif()
+endif()
 
 # ------------------------------------------------------------------------------
 # Installation instructions
 install(
   TARGETS lib${PROJECT_NAME} EXPORT lib${PROJECT_NAME}Targets
-  TARGETS lua luac FILE_SET HEADERS
+  TARGETS lua luac wlua FILE_SET HEADERS
   RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT bin
   LIBRARY DESTINATION ${INSTALL_LIBDIR} COMPONENT lib
   ARCHIVE DESTINATION ${INSTALL_LIBDIR} COMPONENT lib
