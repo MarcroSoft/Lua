@@ -1,7 +1,7 @@
 # MIT License
 #
 # Copyright (c) 1994–2026 Lua.org, PUC-Rio.
-# Copyright (c) 2023-2026 Kritzel Kratzel.
+# Copyright (c) 2023-2026 The OneLuaPro project authors.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in 
@@ -43,24 +43,23 @@
 cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 # Extract current Lua version from lua.h
 file(READ "${CMAKE_SOURCE_DIR}/src/lua.h" _header)
-# LUA_VERSION_MAJOR
-string(REGEX MATCH "#define[ \t]+LUA_VERSION_MAJOR[ \t]+\"([^\"]+)\"" _
-  "${_header}")
-set(LUA_VERSION_MAJOR "${CMAKE_MATCH_1}")
-# LUA_VERSION_MINOR
-string(REGEX MATCH "#define[ \t]+LUA_VERSION_MINOR[ \t]+\"([^\"]+)\"" _
-  "${_header}")
-set(LUA_VERSION_MINOR "${CMAKE_MATCH_1}")
-# LUA_VERSION_RELEASE
-string(REGEX MATCH "#define[ \t]+LUA_VERSION_RELEASE[ \t]+\"([^\"]+)\"" _
-  "${_header}")
-set(LUA_VERSION_RELEASE "${CMAKE_MATCH_1}")
-set(LUA_VERSION ${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}.${LUA_VERSION_RELEASE})
+foreach(_v MAJOR MINOR RELEASE)
+  if(_header MATCHES "#define[ \t]+LUA_VERSION_${_v}_N[ \t]+([0-9]+)")
+    set(LUA_VERSION_${_v} "${CMAKE_MATCH_1}")
+  endif()
+endforeach()
+set(LUA_VERSION "${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}.${LUA_VERSION_RELEASE}")
+
+# ------------------------------------------------------------------------------
+# Project defintion
+project(lua
+  LANGUAGES C
+  VERSION ${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}.${LUA_VERSION_RELEASE}
+)
 
 # ------------------------------------------------------------------------------
 # Installation prefix directory - defaults to C:\Apps\lua-X.Y.Z
-# Needs to be defined before projectdefinition statement - for whatever reason
-if(NOT CMAKE_INSTALL_PREFIX)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   if(WIN32)
     set(CMAKE_INSTALL_PREFIX "C:/Apps/lua-${LUA_VERSION}" CACHE STRING
       "Installation Prefix" FORCE)
@@ -69,12 +68,6 @@ if(NOT CMAKE_INSTALL_PREFIX)
   endif()
 endif()
 
-# ------------------------------------------------------------------------------
-# Project defintion
-project(lua
-  LANGUAGES C
-  VERSION ${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}.${LUA_VERSION_RELEASE}
-)
 # Lua is completely ANSI-C (https://www.lua.org/faq.html#1.1)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_EXTENSIONS OFF)

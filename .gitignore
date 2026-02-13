@@ -47,3 +47,5 @@ CMakeLists.txt~
 
 # build directories
 build
+build64
+
