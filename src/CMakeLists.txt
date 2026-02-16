@@ -26,6 +26,13 @@
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
+if(WIN32 AND CMAKE_C_COMPILER_ID STREQUAL "IntelLLVM" AND CMAKE_BUILD_TYPE STREQUAL "Release")
+  # Full performance in Release mode with Intel compiler on Windows
+  add_compile_options("/O3" "/QxHost")
+  add_link_options("/Qlibs-static")
+endif()
+
+# ------------------------------------------------------------------------------
 # Create static Lua library
 add_library(lib${PROJECT_NAME} STATIC)
 target_sources(lib${PROJECT_NAME}
@@ -59,8 +66,10 @@ if(WIN32)
   set_target_properties(wlua PROPERTIES WIN32_EXECUTABLE TRUE)
   # When using MSVC, the entry point must be explicitly set because
   # lua.c defines a standard "main" function instead of "WinMain":
-  if(MSVC)
-    set_property(TARGET wlua APPEND_STRING PROPERTY LINK_FLAGS " /ENTRY:mainCRTStartup")
+  if(CMAKE_C_COMPILER_ID STREQUAL "IntelLLVM")
+    target_link_options(wlua PRIVATE "/link" "/ENTRY:mainCRTStartup")
+  elseif(MSVC)
+    target_link_options(wlua PRIVATE "/ENTRY:mainCRTStartup")
   endif()
 endif()
 

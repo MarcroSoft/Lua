@@ -29,14 +29,21 @@
 # Visual Studio is a mutlti-configuration generator
 # https://stackoverflow.com/questions/24460486/
 #
-# Basic instructions for out-of-source build
-# ------------------------------------------
+# Basic instructions for out-of-source build with MSVC
+# ----------------------------------------------------
 # mkdir build && cd build
 # cmake .. -G "Visual Studio 17 2022" -A x64
 # cmake --build . --config Release
 # cmake --install . --config Release
 # 
 # Available architectures (-A ...) are: Win32, x64, ARM, ARM64
+#
+# Basic instructions for out-of-source build with IntelLLVM
+# ---------------------------------------------------------
+# mkdir build && cd build
+# cmake .. -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icx
+# cmake --build . [--verbose]
+# cmake --install .
 
 # ------------------------------------------------------------------------------
 # General definitions
@@ -85,6 +92,11 @@ if(WIN32) # true if windows (32 and 64 bit)
     add_definitions(/DWINVER=0x0A00 /D_WIN32_WINNT=0x0A00)
   endif()
 endif()
+# Statically link the MSVC runtime library (MT/MTd) to eliminate DLL dependencies
+# (like VCRUNTIME140.dll) This creates a standalone executable that runs on
+# machines without the Visual C++ Redistributable. Used by MSVC and IntelLLVM,
+# ignored by all others.
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # ------------------------------------------------------------------------------
 # Other settings
