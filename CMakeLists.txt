@@ -92,11 +92,6 @@ if(WIN32) # true if windows (32 and 64 bit)
     add_definitions(/DWINVER=0x0A00 /D_WIN32_WINNT=0x0A00)
   endif()
 endif()
-# Statically link the MSVC runtime library (MT/MTd) to eliminate DLL dependencies
-# (like VCRUNTIME140.dll) This creates a standalone executable that runs on
-# machines without the Visual C++ Redistributable. Used by MSVC and IntelLLVM,
-# ignored by all others.
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # ------------------------------------------------------------------------------
 # Other settings

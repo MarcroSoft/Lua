@@ -26,13 +26,6 @@
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
-if(WIN32 AND CMAKE_C_COMPILER_ID STREQUAL "IntelLLVM" AND CMAKE_BUILD_TYPE STREQUAL "Release")
-  # Full performance in Release mode with Intel compiler on Windows
-  add_compile_options("/O3" "/QxHost")
-  add_link_options("/Qlibs-static")
-endif()
-
-# ------------------------------------------------------------------------------
 # Create static Lua library
 add_library(lib${PROJECT_NAME} STATIC)
 target_sources(lib${PROJECT_NAME}
