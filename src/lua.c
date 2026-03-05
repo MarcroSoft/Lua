@@ -169,6 +169,8 @@ static int docall (lua_State *L, int narg, int nres) {
 static void print_version (void) {
   lua_writestring(LUA_COPYRIGHT, strlen(LUA_COPYRIGHT));
   lua_writeline();
+  lua_writestring(OLP_COPYRIGHT, strlen(OLP_COPYRIGHT));
+  lua_writeline();
 }
 
 
@@ -745,9 +747,45 @@ static int pmain (lua_State *L) {
   return 1;
 }
 
-
 int main (int argc, char **argv) {
   int status, result;
+#ifdef _WIN32
+  {
+    /* DETERMINISTIC DLL RESOLUTION FOR ONELUAPRO:
+     * To keep the '/bin' directory clean, we do not load 'lua.dll' from there.
+     * Instead, we redirect the search to 'lib/lua/<MAJOR>.<MINOR>/'.
+     *
+     * IMPORTANT ARCHITECTURAL NOTE:
+     * This requires the executable to be linked with the '/DELAYLOAD:lua.dll'
+     * linker option and against 'delayimp.lib'.
+     * Delay-loading ensures that the process starts FIRST, allowing this
+     * code to set the custom search path BEFORE the OS tries to find the DLL.
+     *
+     * This guarantees that the interpreter and all DLL-plugins share the exact
+     * same DLL instance, which is e.g. critical for thread-pool stability. */
+    wchar_t exePath[MAX_PATH];
+    if (GetModuleFileNameW(NULL, exePath, MAX_PATH) > 0) {
+      wchar_t *lastSlash = wcsrchr(exePath, L'\\');
+      if (lastSlash) {
+	/* Strip executable name (e.g., 'lua.exe') to get the base '/bin' folder */
+	*lastSlash = L'\0';
+	/* Construct the relative path to the versioned library folder.
+         * The LUAI_TOWSTR macros inject the version numbers from 'lua.h' at
+	 * compile time. */
+	wchar_t dllDir[MAX_PATH];
+	_snwprintf(dllDir, MAX_PATH,
+		   L"%s\\..\\lib\\lua\\"
+		   LUAI_TOWSTR(LUA_VERSION_MAJOR_N)
+		   L"."
+		   LUAI_TOWSTR(LUA_VERSION_MINOR_N),exePath);
+	/* Inject custom search path at the top of the DLL search order.
+         * Since lua.dll is delay-loaded, it will be successfully
+         * found in the version-specific sub-directory. */
+	SetDllDirectoryW(dllDir);
+      }
+    }
+  }
+#endif
   lua_State *L = luaL_newstate();  /* create state */
   if (L == NULL) {
     l_message(argv[0], "cannot create state: not enough memory");

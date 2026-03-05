@@ -124,6 +124,9 @@ set(INSTALL_MANDIR
 set(DEF_INSTALL_CMAKEDIR share/cmake/lib${PROJECT_NAME})
 set(INSTALL_CMAKEDIR
   ${DEF_INSTALL_CMAKEDIR} CACHE PATH "Installation directory for CMake files")
+# Lua-specific installation dirs
+set(INSTALL_TOP_CDIR
+  ${INSTALL_LIBDIR}/lua/${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR})
 
 # ------------------------------------------------------------------------------
 # Report to user

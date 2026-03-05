@@ -1,5 +1,5 @@
 # Lua with CMake Support
-Unaltered [Lua](http://www.lua.org/) source code and documentation with [CMake](https://cmake.org/) build infrastructure. This repository contains different Lua versions extracted from https://www.lua.org/download.html. Tested generators and architectures are:
+Almost unaltered [Lua](http://www.lua.org/) source code and documentation with [CMake](https://cmake.org/) build infrastructure. This repository contains different Lua versions extracted from https://www.lua.org/download.html. Tested generators and architectures are:
 
 - Visual Studio 17 2022, Win32
 - Visual Studio 17 2022, x64

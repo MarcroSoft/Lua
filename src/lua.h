@@ -15,6 +15,7 @@
 
 #define LUA_COPYRIGHT	LUA_RELEASE "  Copyright (C) 1994-2025 Lua.org, PUC-Rio"
 #define LUA_AUTHORS	"R. Ierusalimschy, L. H. de Figueiredo, W. Celes"
+#define OLP_COPYRIGHT	"OneLuaPro  Copyright (C) 2023-2026 The OneLuaPro project authors"
 
 
 #define LUA_VERSION_MAJOR_N	5
@@ -511,6 +512,10 @@ struct lua_Debug {
 
 #define LUAI_TOSTRAUX(x)	#x
 #define LUAI_TOSTR(x)		LUAI_TOSTRAUX(x)
+#ifdef _WIN32
+#define LUAI_TOWSTRAUX(x)	L#x
+#define LUAI_TOWSTR(x)		LUAI_TOWSTRAUX(x)
+#endif
 
 #define LUA_VERSION_MAJOR	LUAI_TOSTR(LUA_VERSION_MAJOR_N)
 #define LUA_VERSION_MINOR	LUAI_TOSTR(LUA_VERSION_MINOR_N)

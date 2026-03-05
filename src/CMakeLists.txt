@@ -26,9 +26,9 @@
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
-# Create static Lua library
-add_library(lib${PROJECT_NAME} STATIC)
-target_sources(lib${PROJECT_NAME}
+# Create the static Lua core library
+add_library(lib${PROJECT_NAME}_objects OBJECT)
+target_sources(lib${PROJECT_NAME}_objects
   PRIVATE lapi.c lctype.c lfunc.c lmathlib.c loslib.c ltable.c lundump.c
   lauxlib.c ldblib.c lgc.c lmem.c lparser.c ltablib.c lutf8lib.c lbaselib.c
   ldebug.c linit.c loadlib.c lstate.c ltm.c lvm.c lcode.c ldo.c liolib.c
@@ -36,8 +36,24 @@ target_sources(lib${PROJECT_NAME}
   lapi.h ldebug.h ljumptab.h lobject.h lprefix.h ltm.h lundump.h
   ldo.h llex.h lopcodes.h lstate.h  lvm.h lcode.h lfunc.h llimits.h lopnames.h
   lstring.h lzio.h lctype.h lgc.h lmem.h lparser.h ltable.h 
+)
+add_library(lib${PROJECT_NAME} SHARED $<TARGET_OBJECTS:lib${PROJECT_NAME}_objects>)
+target_sources(lib${PROJECT_NAME}
   PUBLIC FILE_SET HEADERS
   FILES lua.h luaconf.h lualib.h lauxlib.h lua.hpp
+)
+target_compile_definitions(lib${PROJECT_NAME} PUBLIC LUA_BUILD_AS_DLL)
+set_target_properties(lib${PROJECT_NAME} PROPERTIES
+  WINDOWS_EXPORT_ALL_SYMBOLS TRUE	# export everything
+  OUTPUT_NAME "lua"			# DLL-name: lua.dll
+  PREFIX ""				# No prefix for DLL-name
+  IMPORT_PREFIX "lib"			# Import-lib-name: liblua.lib
+)
+# Fix the output directory for the import library (.lib) during build
+set_target_properties(lib${PROJECT_NAME} PROPERTIES
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 target_include_directories(lib${PROJECT_NAME}
   PUBLIC
@@ -46,16 +62,33 @@ target_include_directories(lib${PROJECT_NAME}
 )
 
 # ------------------------------------------------------------------------------
-# Create and link lua binaries (with wlua for usage with wxLua)
-# wlua prevents the annoying CMD-Window in the background
+# 2. Create the executables (Console and GUI versions). wlua prevents the
+#    annoying CMD-Window in the background
 add_executable(lua lua.c ${PROJECT_SOURCE_DIR}/logo/lua-logo-olp-dist.rc)
-add_executable(luac luac.c ${PROJECT_SOURCE_DIR}/logo/lua-logo-olp-dist.rc)
+add_executable(luac luac.c $<TARGET_OBJECTS:lib${PROJECT_NAME}_objects>
+  ${PROJECT_SOURCE_DIR}/logo/lua-logo-olp-dist.rc)
 add_executable(wlua lua.c ${PROJECT_SOURCE_DIR}/logo/lua-logo-olp-dist.rc)
-target_link_libraries(lua lib${PROJECT_NAME})
-target_link_libraries(luac lib${PROJECT_NAME})
-target_link_libraries(wlua lib${PROJECT_NAME})
+# Link all executables against the static core
+target_link_libraries(lua PRIVATE lib${PROJECT_NAME})	# depends on lua.dll
+target_link_libraries(luac PRIVATE)			# statically built
+target_link_libraries(wlua PRIVATE lib${PROJECT_NAME})	# depends on lua.dll
 if(WIN32)
-  # Set subsystem to WINDOWS for wlua
+  # Delay load of lua.dll, such that SetDllDirectoryW in lua.c has time to run
+  # and use the modified DLL search order (LOAD_WITH_ALTERED_SEARCH_PATH). The
+  # intention is to put lua.dll into lib/lua/5.5/ and not into bin/. This
+  # requires a slight windows-only DLL search path extenstion in main() of lua.c.
+  target_link_options(lua PRIVATE
+    "LINKER:/DELAYLOAD:lua.dll"
+    "LINKER:/DEPENDENTLOADFLAG:0x0"
+  )
+  target_link_options(wlua PRIVATE
+    "LINKER:/DELAYLOAD:lua.dll"
+    "LINKER:/DEPENDENTLOADFLAG:0x0"
+  )
+  # Link against delayimp.lib for the helper code in lua.c
+  target_link_libraries(lua PRIVATE delayimp.lib)
+  target_link_libraries(wlua PRIVATE delayimp.lib)
+  # Configure wlua as a Windows GUI application (no console window)
   set_target_properties(wlua PROPERTIES WIN32_EXECUTABLE TRUE)
   # When using MSVC, the entry point must be explicitly set because
   # lua.c defines a standard "main" function instead of "WinMain":
@@ -67,15 +100,26 @@ if(WIN32)
 endif()
 
 # ------------------------------------------------------------------------------
-# Installation instructions
+# 3. Installation instructions with Export-Sets
+#    Export the shared core library
 install(
-  TARGETS lib${PROJECT_NAME} EXPORT lib${PROJECT_NAME}Targets
-  TARGETS lua luac wlua FILE_SET HEADERS
-  RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT bin
-  LIBRARY DESTINATION ${INSTALL_LIBDIR} COMPONENT lib
+  TARGETS lib${PROJECT_NAME}
+  EXPORT lib${PROJECT_NAME}Targets
+  RUNTIME DESTINATION ${INSTALL_TOP_CDIR} COMPONENT bin
   ARCHIVE DESTINATION ${INSTALL_LIBDIR} COMPONENT lib
-  PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
+  FILE_SET HEADERS DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
 )
+# Install both interpreters
+install(
+  TARGETS lua wlua
+  RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT bin
+)
+# Install compiler
+install(
+  TARGETS luac
+  RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT bin
+)
+# Generate the CMake configuration files for external projects
 install(
   EXPORT lib${PROJECT_NAME}Targets
   FILE lib${PROJECT_NAME}Targets.cmake

@@ -117,6 +117,7 @@ static int doargs(int argc, char* argv[])
  if (version)
  {
   printf("%s\n",LUA_COPYRIGHT);
+  printf("%s\n",OLP_COPYRIGHT);
   if (version==argc-1) exit(EXIT_SUCCESS);
  }
  return i;
