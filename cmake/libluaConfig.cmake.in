@@ -24,7 +24,19 @@
 
 @PACKAGE_INIT@
 
+if(WIN32)
+  set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
+endif()
+
 include("${CMAKE_CURRENT_LIST_DIR}/libluaTargets.cmake")
+
+if(TARGET liblua)
+  set_target_properties(liblua PROPERTIES
+    IMPORTED_LOCATION_RELEASE "${PACKAGE_PREFIX_DIR}/lib/liblua.lib"
+    IMPORTED_LOCATION "${PACKAGE_PREFIX_DIR}/lib/liblua.lib"
+  )
+endif()
+
 # https://cmake.org/cmake/help/latest/module/CMakePackageConfigHelpers.html
 set_and_check(LIBLUA_INSTALLDIR "@PACKAGE_INSTALL_DIR@")
 set_and_check(LIBLUA_INCLUDEDIR "@PACKAGE_INSTALL_INCLUDEDIR@")

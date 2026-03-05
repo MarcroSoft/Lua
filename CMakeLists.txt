@@ -81,19 +81,6 @@ set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # ------------------------------------------------------------------------------
-# OS dependent settings
-# https://learn.microsoft.com/en-us/windows/win32/winprog/using-the-windows-headers
-if(WIN32) # true if windows (32 and 64 bit)
-  if(${CMAKE_SYSTEM_VERSION} EQUAL 6.1.7601) # Windows 7 SP1
-    # Build for Windows 7 and upwards
-    add_definitions(/DWINVER=0x0601 /D_WIN32_WINNT=0x0601)
-  else() # Some other Windows
-    # Build for Win 10 and upwards
-    add_definitions(/DWINVER=0x0A00 /D_WIN32_WINNT=0x0A00)
-  endif()
-endif()
-
-# ------------------------------------------------------------------------------
 # Other settings
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 if(NOT CMAKE_BUILD_TYPE)
