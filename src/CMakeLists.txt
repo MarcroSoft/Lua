@@ -37,6 +37,7 @@ target_sources(lib${PROJECT_NAME}_objects
   ldo.h llex.h lopcodes.h lstate.h  lvm.h lcode.h lfunc.h llimits.h lopnames.h
   lstring.h lzio.h lctype.h lgc.h lmem.h lparser.h ltable.h 
 )
+target_compile_definitions(lib${PROJECT_NAME}_objects PRIVATE LUA_BUILD_AS_DLL)
 add_library(lib${PROJECT_NAME} SHARED $<TARGET_OBJECTS:lib${PROJECT_NAME}_objects>)
 target_sources(lib${PROJECT_NAME}
   PUBLIC FILE_SET HEADERS
