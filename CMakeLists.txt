@@ -61,7 +61,7 @@ set(LUA_VERSION "${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}.${LUA_VERSION_RELEASE
 # Project defintion
 project(lua
   LANGUAGES C
-  VERSION ${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}.${LUA_VERSION_RELEASE}
+  VERSION 5.4.8
 )
 
 # ------------------------------------------------------------------------------
