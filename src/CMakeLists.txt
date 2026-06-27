@@ -43,6 +43,30 @@ set_target_properties(lib${PROJECT_NAME} PROPERTIES
 # Static builds must not use __declspec(dllimport/dllexport).
 
 # ------------------------------------------------------------------------------
+# Bytecode-only Lua library (for the Oidua game stub)
+# ------------------------------------------------------------------------------
+# The stub only ever loads precompiled bytecode, so the Lua front-end is dead
+# weight there. ldo.c's f_parser drops its text-compilation branch under
+# LUA_NOPARSER, which removes the only reference to luaY_parser; with that gone we
+# can leave lparser.c and lcode.c out of the archive entirely. llex.c stays
+# because lstate.c calls luaX_init when a state is created.
+
+set(LUA_BCO_SOURCES ${LUA_CORE_SOURCES})
+list(REMOVE_ITEM LUA_BCO_SOURCES lparser.c lcode.c)
+
+add_library(liblua_bco STATIC ${LUA_BCO_SOURCES})
+target_compile_definitions(liblua_bco PRIVATE LUA_NOPARSER)
+target_include_directories(liblua_bco
+  PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+)
+set_target_properties(liblua_bco PROPERTIES
+  OUTPUT_NAME "lua_bco"
+  PREFIX "lib"
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+)
+
+# ------------------------------------------------------------------------------
 # Executables
 # ------------------------------------------------------------------------------
 

@@ -1005,8 +1005,18 @@ static void f_parser (lua_State *L, void *ud) {
     cl = luaU_undump(L, p->z, p->name);
   }
   else {
+#ifdef LUA_NOPARSER
+    /* Altered for Oidua: this build excludes the Lua front-end (lparser/lcode),
+       so only precompiled bytecode chunks can be loaded. Dropping the call to
+       luaY_parser here is what removes the reference that would otherwise link
+       the parser into the executable. luaD_throw is l_noret, so control never
+       reaches the code below and cl stays definitely-assigned on live paths. */
+    luaO_pushfstring(L, "%s: source loading is disabled (bytecode only)", p->name);
+    luaD_throw(L, LUA_ERRSYNTAX);
+#else
     checkmode(L, p->mode, "text");
     cl = luaY_parser(L, p->z, &p->buff, &p->dyd, p->name, c);
+#endif
   }
   lua_assert(cl->nupvalues == cl->p->sizeupvalues);
   luaF_initupvals(L, cl);
