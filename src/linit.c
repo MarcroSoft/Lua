@@ -41,15 +41,25 @@
 */
 static const luaL_Reg loadedlibs[] = {
   {LUA_GNAME, luaopen_base},
+#ifndef LUA_NOPARSER
+  /* Altered for Oidua: the bytecode-only stub build drops package (require),
+     io and debug from the sandbox. None of them are part of the documented
+     scripting API, and leaving them out keeps loadlib.c, liolib.c and
+     ldblib.c out of the shipped executable. */
   {LUA_LOADLIBNAME, luaopen_package},
+#endif
   {LUA_COLIBNAME, luaopen_coroutine},
   {LUA_TABLIBNAME, luaopen_table},
+#ifndef LUA_NOPARSER
   {LUA_IOLIBNAME, luaopen_io},
+#endif
   {LUA_OSLIBNAME, luaopen_os},
   {LUA_STRLIBNAME, luaopen_string},
   {LUA_MATHLIBNAME, luaopen_math},
   {LUA_UTF8LIBNAME, luaopen_utf8},
+#ifndef LUA_NOPARSER
   {LUA_DBLIBNAME, luaopen_debug},
+#endif
   {NULL, NULL}
 };
 

@@ -46,13 +46,16 @@ set_target_properties(lib${PROJECT_NAME} PROPERTIES
 # Bytecode-only Lua library (for the Oidua game stub)
 # ------------------------------------------------------------------------------
 # The stub only ever loads precompiled bytecode, so the Lua front-end is dead
-# weight there. ldo.c's f_parser drops its text-compilation branch under
-# LUA_NOPARSER, which removes the only reference to luaY_parser; with that gone we
-# can leave lparser.c and lcode.c out of the archive entirely. llex.c stays
-# because lstate.c calls luaX_init when a state is created.
+# weight there. LUA_NOPARSER drops the text-compilation branch in ldo.c's
+# f_parser (the only reference to luaY_parser), the luaX_init call in lstate.c
+# (the only reference into llex.c outside the parser) and the luaU_dump call
+# in lapi.c's lua_dump (the only reference to ldump.c), so lparser.c, lcode.c,
+# llex.c and ldump.c can all stay out of the archive. It also trims linit.c's
+# luaL_openlibs list down to the sandboxed stdlib (no package/require, io or
+# debug), which is what lets loadlib.c, liolib.c and ldblib.c go too.
 
 set(LUA_BCO_SOURCES ${LUA_CORE_SOURCES})
-list(REMOVE_ITEM LUA_BCO_SOURCES lparser.c lcode.c)
+list(REMOVE_ITEM LUA_BCO_SOURCES lparser.c lcode.c llex.c ldump.c loadlib.c liolib.c ldblib.c)
 
 add_library(liblua_bco STATIC ${LUA_BCO_SOURCES})
 target_compile_definitions(liblua_bco PRIVATE LUA_NOPARSER)

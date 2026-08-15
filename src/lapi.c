@@ -1108,6 +1108,16 @@ LUA_API int lua_load (lua_State *L, lua_Reader reader, void *data,
 
 
 LUA_API int lua_dump (lua_State *L, lua_Writer writer, void *data, int strip) {
+#ifdef LUA_NOPARSER
+  /* Altered for Oidua: the bytecode-only build excludes the bytecode writer
+     (ldump.c); this was its only remaining reference. Fail like the stock
+     implementation does for a non-dumpable function. */
+  lua_lock(L);
+  api_checknelems(L, 1);
+  UNUSED(writer); UNUSED(data); UNUSED(strip);
+  lua_unlock(L);
+  return 1;
+#else
   int status;
   TValue *o;
   lua_lock(L);
@@ -1119,6 +1129,7 @@ LUA_API int lua_dump (lua_State *L, lua_Writer writer, void *data, int strip) {
     status = 1;
   lua_unlock(L);
   return status;
+#endif
 }
 
 
