@@ -48,11 +48,20 @@
 # ------------------------------------------------------------------------------
 # General definitions
 cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
-# Extract current Lua version from lua.h
+# Extract current Lua version from lua.h. 5.4 spells the components as strings
+# (LUA_VERSION_MAJOR "5"), 5.5 as bare numbers (LUA_VERSION_MAJOR_N 5), so accept
+# both: this repository swaps Lua releases in and out, and matching only one form
+# is what left LUA_VERSION empty after the 5.5 -> 5.4.8 swap - which then showed
+# up as an install prefix of C:/Apps/lua-.. and a module directory of lib/lua/.
+# Fail loudly instead of carrying an empty version through the build.
 file(READ "${CMAKE_SOURCE_DIR}/src/lua.h" _header)
 foreach(_v MAJOR MINOR RELEASE)
-  if(_header MATCHES "#define[ \t]+LUA_VERSION_${_v}_N[ \t]+([0-9]+)")
+  if(_header MATCHES "#define[ \t]+LUA_VERSION_${_v}[ \t]+\"([0-9]+)\"")
     set(LUA_VERSION_${_v} "${CMAKE_MATCH_1}")
+  elseif(_header MATCHES "#define[ \t]+LUA_VERSION_${_v}_N[ \t]+([0-9]+)")
+    set(LUA_VERSION_${_v} "${CMAKE_MATCH_1}")
+  else()
+    message(FATAL_ERROR "Cannot read LUA_VERSION_${_v} from src/lua.h")
   endif()
 endforeach()
 set(LUA_VERSION "${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}.${LUA_VERSION_RELEASE}")
@@ -61,7 +70,7 @@ set(LUA_VERSION "${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}.${LUA_VERSION_RELEASE
 # Project defintion
 project(lua
   LANGUAGES C
-  VERSION 5.4.8
+  VERSION ${LUA_VERSION}
 )
 
 # ------------------------------------------------------------------------------
