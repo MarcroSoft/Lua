@@ -235,12 +235,7 @@ static void f_luaopen (lua_State *L, void *ud) {
   init_registry(L, g);
   luaS_init(L);
   luaT_init(L);
-#ifndef LUA_NOPARSER
-  /* Altered for Oidua: luaX_init only interns the reserved words for the
-     lexer. The bytecode-only build excludes the lexer, and dropping this call
-     removes the reference that would otherwise link llex.c in. */
   luaX_init(L);
-#endif
   g->gcstp = 0;  /* allow gc */
   setnilvalue(&g->nilvalue);  /* now state is complete */
   luai_userstateopen(L);

@@ -38,7 +38,7 @@ Replace `<arch>` with your desired architecture. Available architectures with se
 
 - `bin`: Lua binaries `lua.exe` and `luac.exe`, both statically linked, no DLL dependency,
 - `include`: Public header files,
-- `lib`: Lua static library `liblua.lib`,
+- `lib`: Lua static library `liblua.lib` (see *Bytecode-only library* below for the second one),
 - `share`: documentation, man-pages, CMake configuration.
 
 The default installation path can be overwritten by using `CMAKE_INSTALL_PREFIX` at the command line during CMake configuration. Example:
@@ -57,9 +57,9 @@ Open an new command window and test lua. Use `CTRL-C` to leave Lua in interactiv
 
 ```cmd
 C:\Users\John Doe>lua
-Lua 5.5.0  Copyright (C) 1994-2025 Lua.org, PUC-Rio
+Lua 5.4.8  Copyright (C) 1994-2025 Lua.org, PUC-Rio
 > print(_VERSION)
-Lua 5.5
+Lua 5.4
 >
 C:\Users\John Doe>
 ```
@@ -75,6 +75,23 @@ start "" wlua.exe "%~dp0prog.lua" %*
 popd
 exit
 ```
+
+## Bytecode-only library
+
+Alongside `liblua.lib` the build produces `liblua_bco.lib`, a second static
+library for embedders that only ever load precompiled bytecode. It leaves out
+the Lua front-end - `lparser.c`, `lcode.c`, `llex.c` and `ldump.c` - together
+with `loadlib.c`, `liolib.c` and `ldblib.c`, so `require`, `io` and `debug` are
+not in the sandbox it opens. Loading source text fails with `LUA_ERRSYNTAX` and
+the message `<chunkname>: source loading is disabled (bytecode only)`; loading
+and running bytecode is unchanged.
+
+Everything that makes this work lives in `src/lnoparser.c`, which defines the
+three symbols the rest of the library uses to reach the front-end (`luaX_init`,
+`luaY_parser`, `luaU_dump`) and stands in for `linit.c`'s `luaL_openlibs`.
+Nothing else is patched: every `.c` and `.h` file under `src/` is byte-identical
+to the official lua-5.4.8 release, so upgrading to a later 5.4.x is a plain
+drop-in of `src/`.
 
 ## License
 

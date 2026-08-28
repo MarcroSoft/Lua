@@ -46,19 +46,24 @@ set_target_properties(lib${PROJECT_NAME} PROPERTIES
 # Bytecode-only Lua library (for the Oidua game stub)
 # ------------------------------------------------------------------------------
 # The stub only ever loads precompiled bytecode, so the Lua front-end is dead
-# weight there. LUA_NOPARSER drops the text-compilation branch in ldo.c's
-# f_parser (the only reference to luaY_parser), the luaX_init call in lstate.c
-# (the only reference into llex.c outside the parser) and the luaU_dump call
-# in lapi.c's lua_dump (the only reference to ldump.c), so lparser.c, lcode.c,
-# llex.c and ldump.c can all stay out of the archive. It also trims linit.c's
-# luaL_openlibs list down to the sandboxed stdlib (no package/require, io or
-# debug), which is what lets loadlib.c, liolib.c and ldblib.c go too.
+# weight there. lnoparser.c supplies the three symbols that tie the rest of the
+# library to it - luaX_init (lstate.c), luaY_parser (ldo.c) and luaU_dump
+# (lapi.c) - so lparser.c, lcode.c, llex.c and ldump.c can stay out of the
+# archive. It also stands in for linit.c with a luaL_openlibs limited to the
+# sandboxed stdlib (no package/require, io or debug), which is what lets
+# loadlib.c, liolib.c and ldblib.c go too.
+#
+# Keeping all of that in lnoparser.c rather than in #ifdefs is what leaves
+# every Lua source file byte-identical to the official 5.4.8 release, so the
+# next 5.4.x is a plain drop-in of src/. It also turns an accidental
+# re-inclusion of any excluded file into a duplicate symbol error.
 
 set(LUA_BCO_SOURCES ${LUA_CORE_SOURCES})
-list(REMOVE_ITEM LUA_BCO_SOURCES lparser.c lcode.c llex.c ldump.c loadlib.c liolib.c ldblib.c)
+list(REMOVE_ITEM LUA_BCO_SOURCES
+  lparser.c lcode.c llex.c ldump.c loadlib.c liolib.c ldblib.c linit.c)
+list(APPEND LUA_BCO_SOURCES lnoparser.c)
 
 add_library(liblua_bco STATIC ${LUA_BCO_SOURCES})
-target_compile_definitions(liblua_bco PRIVATE LUA_NOPARSER)
 target_include_directories(liblua_bco
   PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
